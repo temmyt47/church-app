@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#1d3a8a" />
+<title>RCCG Voice of Jesus — Children's Church Check-In</title>
+<style>
+  :root{
+    --navy:#1d3a8a; --navy-dark:#152a63; --gold:#f2b705;
+    --green:#1a9e54; --green-dark:#157a41; --red:#c0392b;
+    --bg:#eef1f7; --card:#ffffff; --ink:#1b2238; --muted:#697089;
+    --line:#dde2ee; --shadow:0 2px 10px rgba(20,30,70,.08);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{margin:0; height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); overscroll-behavior:none;
+  }
+  header{
+    background:linear-gradient(135deg,var(--navy),var(--navy-dark));
+    color:#fff; padding:14px 18px; display:flex; align-items:center; gap:14px;
+    position:sticky; top:0; z-index:20; box-shadow:0 2px 12px rgba(0,0,0,.18);
+  }
+  .logo{
+    width:46px;height:46px;border-radius:12px;background:var(--gold);color:var(--navy-dark);
+    display:grid;place-items:center;font-weight:800;font-size:18px;flex:0 0 auto;letter-spacing:.5px;
+  }
+  header h1{font-size:18px;margin:0;line-height:1.15}
+  header .sub{font-size:12.5px;opacity:.85;margin-top:1px}
+  .datewrap{margin-left:auto;text-align:right}
+  .datewrap label{display:block;font-size:11px;opacity:.8;margin-bottom:2px}
+  .datewrap input{
+    border:none;border-radius:9px;padding:8px 10px;font-size:15px;font-weight:600;
+    background:rgba(255,255,255,.16);color:#fff;
+  }
+  .datewrap input::-webkit-calendar-picker-indicator{filter:invert(1)}
+
+  nav{display:flex;gap:6px;padding:10px 14px 0;background:var(--bg);position:sticky;top:74px;z-index:15}
+  nav button{
+    flex:1;border:none;background:transparent;padding:12px 8px;border-radius:12px 12px 0 0;
+    font-size:15px;font-weight:700;color:var(--muted);cursor:pointer;
+  }
+  nav button.active{background:var(--card);color:var(--navy);box-shadow:var(--shadow)}
+  nav .badge{display:inline-block;min-width:20px;padding:1px 6px;border-radius:20px;background:var(--navy);
+    color:#fff;font-size:12px;margin-left:5px;vertical-align:middle}
+
+  main{padding:16px 14px 90px;max-width:1100px;margin:0 auto}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .search{flex:1;min-width:180px;position:relative}
+  .search input{
+    width:100%;padding:14px 14px 14px 42px;border:1px solid var(--line);border-radius:12px;
+    font-size:16px;background:var(--card);box-shadow:var(--shadow)
+  }
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.45}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .stat{background:var(--card);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow);flex:1;min-width:120px;text-align:center}
+  .stat b{display:block;font-size:26px;color:var(--navy)}
+  .stat span{font-size:12.5px;color:var(--muted)}
+  .stat.in b{color:var(--green)}
+
+  .group-title{margin:18px 2px 8px;font-size:13px;font-weight:800;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px}
+  .person{
+    background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;
+    box-shadow:var(--shadow);transition:transform .06s ease, border-color .15s; position:relative; user-select:none;
+  }
+  .person:active{transform:scale(.97)}
+  .person.in{border-color:var(--green);background:#f1faf4}
+  .person .avatar{
+    width:48px;height:48px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;
+    font-weight:700;font-size:18px;margin-bottom:8px
+  }
+  .person.in .avatar{background:var(--green)}
+  .person .name{font-weight:700;font-size:16px;line-height:1.2}
+  .person .meta{font-size:12.5px;color:var(--muted);margin-top:3px;min-height:16px}
+  .person .status{
+    margin-top:10px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--muted)
+  }
+  .person.in .status{color:var(--green-dark)}
+  .dot{width:9px;height:9px;border-radius:50%;background:#c4cad9}
+  .person.in .dot{background:var(--green)}
+  .person .tag{position:absolute;top:10px;right:10px;font-size:10.5px;font-weight:800;padding:3px 7px;border-radius:8px;background:#fdeecb;color:#8a6500}
+  .person .tag.alert{background:#fde1de;color:#a32b1d}
+
+  .empty{text-align:center;color:var(--muted);padding:50px 20px}
+  .empty svg{opacity:.3;margin-bottom:10px}
+
+  /* Roster */
+  .roster-row{
+    background:var(--card);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:12px;margin-bottom:8px
+  }
+  .roster-row .avatar{width:40px;height:40px;font-size:15px}
+  .roster-row .info{flex:1;min-width:0}
+  .roster-row .info b{font-size:15.5px}
+  .roster-row .info small{display:block;color:var(--muted);font-size:12.5px}
+  .roster-row .icon-btn{background:#f0f2f8;border:none;border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer;color:var(--navy);font-weight:700}
+
+  /* Reports */
+  table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  th,td{padding:11px 12px;text-align:left;font-size:14px;border-bottom:1px solid var(--line)}
+  th{background:#f6f8fc;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  tr:last-child td{border-bottom:none}
+  td.t-in{color:var(--green-dark);font-weight:600}
+  td.t-out{color:var(--muted)}
+
+  /* Buttons */
+  .btn{border:none;border-radius:12px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer}
+  .btn-primary{background:var(--navy);color:#fff}
+  .btn-gold{background:var(--gold);color:var(--navy-dark)}
+  .btn-ghost{background:var(--card);color:var(--navy);border:1px solid var(--line)}
+  .btn-danger{background:#fff;color:var(--red);border:1px solid #f0c9c4}
+  .btn-block{width:100%}
+  .fab{
+    position:fixed;right:18px;bottom:20px;z-index:18;background:var(--gold);color:var(--navy-dark);
+    border:none;border-radius:50px;padding:16px 22px;font-size:16px;font-weight:800;box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer
+  }
+
+  /* Modal */
+  .modal-bg{position:fixed;inset:0;background:rgba(15,20,40,.5);display:none;z-index:40;align-items:center;justify-content:center;padding:16px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:18px;width:100%;max-width:460px;max-height:92vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+  .modal-head{padding:18px 20px 6px}
+  .modal-head h2{margin:0;font-size:20px;color:var(--navy)}
+  .modal-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+  .modal-body{padding:14px 20px 4px}
+  .modal-foot{padding:14px 20px 20px;display:flex;gap:10px}
+  .modal-foot .btn{flex:1}
+  .field{margin-bottom:13px}
+  .field label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:5px}
+  .field input,.field select,.field textarea{
+    width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fbfcfe;font-family:inherit
+  }
+  .field textarea{min-height:64px;resize:vertical}
+  .row2{display:flex;gap:10px}
+  .row2 .field{flex:1}
+
+  /* Security code pad */
+  .codeview{text-align:center;padding:6px 0 2px}
+  .codeview .big{font-size:40px;font-weight:800;letter-spacing:8px;color:var(--navy);background:#f6f8fc;border-radius:14px;padding:14px;margin:6px 0 4px}
+  .pin-dots{display:flex;gap:12px;justify-content:center;margin:8px 0 16px}
+  .pin-dots i{width:16px;height:16px;border-radius:50%;background:var(--line);transition:background .1s}
+  .pin-dots i.f{background:var(--navy)}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .pad button{padding:18px;font-size:22px;font-weight:700;border:1px solid var(--line);background:#fbfcfe;border-radius:14px;cursor:pointer}
+  .pad button:active{background:#eef1f7}
+  .pad .wide{grid-column:span 1}
+  .alert-line{background:#fdeecb;color:#8a6500;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;margin-bottom:12px;display:none}
+  .alert-line.alert{background:#fde1de;color:#a32b1d}
+  .alert-line.show{display:block}
+
+  .toast{
+    position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:13px 22px;border-radius:30px;font-weight:600;font-size:15px;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.3)
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{background:var(--red)}
+
+  @media(max-width:560px){
+    header h1{font-size:15.5px}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">VOJ</div>
+  <div>
+    <h1>RCCG Voice of Jesus</h1>
+    <div class="sub">Children's Church · Check-In &amp; Out</div>
+  </div>
+  <div class="datewrap">
+    <label for="svcDate">Service date</label>
+    <input type="date" id="svcDate" />
+  </div>
+</header>
+
+<nav>
+  <button data-tab="checkin" class="active">Check-In <span class="badge" id="badgeIn">0</span></button>
+  <button data-tab="roster">Roster</button>
+  <button data-tab="reports">Reports</button>
+</nav>
+
+<main>
+  <!-- CHECK-IN TAB -->
+  <section id="tab-checkin">
+    <div class="stats" id="stats"></div>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchIn" type="search" placeholder="Search a name to check in/out…" autocomplete="off" />
+      </div>
+    </div>
+    <div id="checkinLists"></div>
+  </section>
+
+  <!-- ROSTER TAB -->
+  <section id="tab-roster" style="display:none">
+    <div class="toolbar">
+      <div class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchRoster" type="search" placeholder="Search roster…" autocomplete="off" />
+      </div>
+      <button class="btn btn-primary" id="addChildBtn">+ Child</button>
+      <button class="btn btn-gold" id="addStaffBtn">+ Staff</button>
+    </div>
+    <div id="rosterLists"></div>
+  </section>
+
+  <!-- REPORTS TAB -->
+  <section id="tab-reports" style="display:none">
+    <div class="stats" id="reportStats"></div>
+    <div class="toolbar">
+      <button class="btn btn-ghost" id="exportBtn">⬇ Export CSV (this service)</button>
+      <button class="btn btn-ghost" id="printBtn">🖨 Print roster</button>
+    </div>
+    <div id="reportTable"></div>
+  </section>
+</main>
+
+<button class="fab" id="fab">+ Add</button>
+
+<!-- Person add/edit modal -->
+<div class="modal-bg" id="personModal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="pmTitle">Add Child</h2><p id="pmSub"></p></div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field"><label>First name</label><input id="pmFirst" /></div>
+        <div class="field"><label>Last name</label><input id="pmLast" /></div>
+      </div>
+      <div id="childFields">
+        <div class="row2">
+          <div class="field"><label>Class / Age group</label>
+            <select id="pmGroup">
+              <option value="Nursery">Nursery (0–2)</option>
+              <option value="Toddlers">Toddlers (3–4)</option>
+              <option value="Beginners">Beginners (5–7)</option>
+              <option value="Primary">Primary (8–10)</option>
+              <option value="Juniors">Juniors (11–13)</option>
+            </select>
+          </div>
+          <div class="field"><label>Security code (pickup)</label><input id="pmCode" maxlength="4" inputmode="numeric" placeholder="auto" /></div>
+        </div>
+        <div class="field"><label>Guardian name</label><input id="pmGuardian" /></div>
+        <div class="field"><label>Guardian phone</label><input id="pmPhone" inputmode="tel" /></div>
+        <div class="field"><label>Allergies / medical / notes</label><textarea id="pmNotes" placeholder="e.g. Peanut allergy"></textarea></div>
+      </div>
+      <div id="staffFields" style="display:none">
+        <div class="field"><label>Role</label>
+          <select id="pmRole">
+            <option>Teacher</option><option>Assistant</option><option>Coordinator</option>
+            <option>Security / Pickup</option><option>Worship</option><option>Volunteer</option>
+          </select>
+        </div>
+        <div class="field"><label>Phone</label><input id="pmStaffPhone" inputmode="tel" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger" id="pmDelete" style="display:none">Delete</button>
+      <button class="btn btn-ghost" id="pmCancel">Cancel</button>
+      <button class="btn btn-primary" id="pmSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Check-in / out confirm modal -->
+<div class="modal-bg" id="actionModal">
+  <div class="modal">
+    <div class="modal-head"><h2 id="amTitle"></h2><p id="amSub"></p></div>
+    <div class="modal-body">
+      <div class="alert-line" id="amAlert"></div>
+      <div id="amCodeView" class="codeview" style="display:none">
+        <p style="margin:0 0 2px;color:var(--muted);font-size:13px">Pickup security code</p>
+        <div class="big" id="amCodeBig">––––</div>
+        <p style="margin:0;color:var(--muted);font-size:12.5px">Guardian must present this code at pickup.</p>
+      </div>
+      <div id="amPinView" style="display:none">
+        <p style="text-align:center;color:var(--muted);font-size:14px;margin:2px 0">Enter the pickup security code</p>
+        <div class="pin-dots" id="pinDots"><i></i><i></i><i></i><i></i></div>
+        <div class="pad">
+          <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+          <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+          <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+          <button data-k="clear">✕</button><button data-k="0">0</button><button data-k="back">⌫</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="amCancel">Cancel</button>
+      <button class="btn btn-primary" id="amConfirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ---------- Storage ---------- */
+const DB_KEY = "rccg_voj_checkin_v1";
+const db = loadDB();
+function loadDB(){
+  let d;
+  try{ d = JSON.parse(localStorage.getItem(DB_KEY)); }catch(e){}
+  if(!d) d = { children:[], staff:[], attendance:{} }; // attendance[date] = { [type_id]: {in, out, code, by} }
+  // Every child must have a 4-digit pickup code. Backfill legacy/imported
+  // records so no child can ever be checked out without code verification.
+  let changed=false;
+  // Every person needs a UNIQUE id — attendance records are keyed by it, so a
+  // missing or duplicate id makes separate people share one check-in/out record
+  // (checking one out then appears to check them all out).
+  const seenIds=new Set();
+  [...(d.children||[]), ...(d.staff||[])].forEach(p=>{
+    if(!p.id || seenIds.has(p.id)){ p.id=uid(); changed=true; }
+    seenIds.add(p.id);
+  });
+  (d.children||[]).forEach(c=>{ if(!/^\d{4}$/.test(String(c.code||""))){ c.code=gen4(); changed=true; } });
+  if(changed){ try{ localStorage.setItem(DB_KEY, JSON.stringify(d)); }catch(e){} }
+  return d;
+}
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const uid = () => {
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+};
+function fmtTime(ts){ if(!ts) return ""; const d=new Date(ts); return d.toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}); }
+function initials(f,l){ return ((f||"")[0]||"").toUpperCase() + ((l||"")[0]||"").toUpperCase(); }
+function todayStr(){ const d=new Date(); const o=d.getTimezoneOffset(); return new Date(d-o*60000).toISOString().slice(0,10); }
+function gen4(){ return String(Math.floor(1000+Math.random()*9000)); }
+function dayRec(){ const d=$("#svcDate").value; if(!db.attendance[d]) db.attendance[d]={}; return db.attendance[d]; }
+function key(type,id){ return type+"_"+id; }
+
+let toastTimer;
+function toast(msg, err){
+  const t=$("#toast"); t.textContent=msg; t.className="toast show"+(err?" err":"");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.className="toast",2200);
+}
+
+/* ---------- Tabs ---------- */
+$$("nav button").forEach(b=>b.onclick=()=>{
+  $$("nav button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  ["checkin","roster","reports"].forEach(t=>$("#tab-"+t).style.display = t===b.dataset.tab?"":"none");
+  $("#fab").style.display = b.dataset.tab==="roster" ? "" : "none";
+  render();
+});
+
+/* ---------- Date ---------- */
+$("#svcDate").value = todayStr();
+$("#svcDate").onchange = render;
+
+/* ---------- Render ---------- */
+function render(){ renderCheckin(); renderRoster(); renderReports(); }
+
+function personCard(p, type){
+  const rec = dayRec()[key(type,p.id)];
+  const isIn = rec && rec.in && !rec.out;
+  const div = document.createElement("div");
+  div.className = "person" + (isIn?" in":"");
+  let tag = "";
+  if(type==="child" && p.notes && p.notes.trim()) tag = `<div class="tag alert">⚠ NOTE</div>`;
+  if(type==="staff") tag = `<div class="tag">${esc(p.role||"Staff")}</div>`;
+  const meta = type==="child" ? (p.group||"") : (p.role||"");
+  let status;
+  if(isIn) status = `checked in · ${fmtTime(rec.in)}`;
+  else if(rec && rec.out) status = `out · ${fmtTime(rec.out)}`;
+  else status = "tap to check in";
+  div.innerHTML = `
+    ${tag}
+    <div class="avatar">${initials(p.first,p.last)}</div>
+    <div class="name">${esc(p.first)} ${esc(p.last)}</div>
+    <div class="meta">${esc(meta)}</div>
+    <div class="status"><span class="dot"></span>${status}</div>`;
+  div.onclick = ()=>openAction(p, type);
+  return div;
+}
+
+function esc(s){ return (s||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function renderCheckin(){
+  const q = $("#searchIn").value.trim().toLowerCase();
+  const wrap = $("#checkinLists"); wrap.innerHTML="";
+  const rec = dayRec();
+  const filt = p => !q || (p.first+" "+p.last).toLowerCase().includes(q);
+
+  // Stats
+  const childIn = db.children.filter(p=>{const r=rec[key("child",p.id)];return r&&r.in&&!r.out;}).length;
+  const staffIn = db.staff.filter(p=>{const r=rec[key("staff",p.id)];return r&&r.in&&!r.out;}).length;
+  $("#stats").innerHTML = `
+    <div class="stat in"><b>${childIn}</b><span>Children present</span></div>
+    <div class="stat in"><b>${staffIn}</b><span>Staff present</span></div>
+    <div class="stat"><b>${db.children.length}</b><span>Total children</span></div>
+    <div class="stat"><b>${db.staff.length}</b><span>Total staff</span></div>`;
+  $("#badgeIn").textContent = childIn + staffIn;
+
+  const sections = [
+    ["child","Children", db.children],
+    ["staff","Staff", db.staff],
+  ];
+  let any=false;
+  for(const [type,label,list] of sections){
+    const shown = list.filter(filt).sort(byPresenceThenName(type,rec));
+    if(!shown.length) continue;
+    any=true;
+    const h=document.createElement("div"); h.className="group-title"; h.textContent=`${label} · ${shown.length}`;
+    wrap.appendChild(h);
+    const g=document.createElement("div"); g.className="grid";
+    shown.forEach(p=>g.appendChild(personCard(p,type)));
+    wrap.appendChild(g);
+  }
+  if(!any){
+    wrap.innerHTML = `<div class="empty">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      <h3>${db.children.length+db.staff.length? "No matches":"No one on the roster yet"}</h3>
+      <p>${db.children.length+db.staff.length? "Try another name." : "Go to the Roster tab to add children and staff."}</p>
+    </div>`;
+  }
+}
+function byPresenceThenName(type,rec){
+  return (a,b)=>{
+    const ra=rec[key(type,a.id)], rb=rec[key(type,b.id)];
+    const ia=ra&&ra.in&&!ra.out?0:1, ib=rb&&rb.in&&!rb.out?0:1;
+    if(ia!==ib) return ia-ib;
+    return (a.first+a.last).localeCompare(b.first+b.last);
+  };
+}
+
+function renderRoster(){
+  const q = $("#searchRoster").value.trim().toLowerCase();
+  const wrap=$("#rosterLists"); wrap.innerHTML="";
+  const filt = p => !q || (p.first+" "+p.last).toLowerCase().includes(q);
+  const groups = [
+    ["child","Children", db.children],
+    ["staff","Staff", db.staff],
+  ];
+  let any=false;
+  for(const [type,label,list] of groups){
+    const shown=list.filter(filt).sort((a,b)=>(a.first+a.last).localeCompare(b.first+b.last));
+    if(!shown.length) continue;
+    any=true;
+    const h=document.createElement("div"); h.className="group-title"; h.textContent=`${label} · ${shown.length}`;
+    wrap.appendChild(h);
+    shown.forEach(p=>{
+      const row=document.createElement("div"); row.className="roster-row";
+      const sub = type==="child"
+        ? `${esc(p.group||"")}${p.guardian?" · "+esc(p.guardian):""}${p.phone?" · "+esc(p.phone):""}`
+        : `${esc(p.role||"")}${p.phone?" · "+esc(p.phone):""}`;
+      row.innerHTML = `
+        <div class="avatar">${initials(p.first,p.last)}</div>
+        <div class="info"><b>${esc(p.first)} ${esc(p.last)}</b><small>${sub||"—"}</small></div>
+        <button class="icon-btn">Edit</button>`;
+      row.querySelector(".icon-btn").onclick=()=>openPersonModal(type,p);
+      wrap.appendChild(row);
+    });
+  }
+  if(!any) wrap.innerHTML=`<div class="empty"><h3>Roster is empty</h3><p>Use “+ Child” or “+ Staff” to begin.</p></div>`;
+}
+
+function renderReports(){
+  const rec=dayRec();
+  const rows=[];
+  const push=(p,type)=>{ const r=rec[key(type,p.id)]; if(r&&r.in) rows.push({p,type,r}); };
+  db.children.forEach(p=>push(p,"child")); db.staff.forEach(p=>push(p,"staff"));
+  rows.sort((a,b)=>a.r.in-b.r.in);
+
+  const present = rows.filter(x=>!x.r.out).length;
+  $("#reportStats").innerHTML = `
+    <div class="stat"><b>${rows.length}</b><span>Checked in today</span></div>
+    <div class="stat in"><b>${present}</b><span>Still present</span></div>
+    <div class="stat"><b>${rows.length-present}</b><span>Checked out</span></div>`;
+
+  const t=$("#reportTable");
+  if(!rows.length){ t.innerHTML=`<div class="empty"><h3>No check-ins for this service</h3><p>Records will appear here as people check in.</p></div>`; return; }
+  let html=`<table><thead><tr><th>Name</th><th>Type</th><th>Class/Role</th><th>In</th><th>Out</th><th>By</th></tr></thead><tbody>`;
+  for(const {p,type,r} of rows){
+    html+=`<tr>
+      <td><b>${esc(p.first)} ${esc(p.last)}</b></td>
+      <td>${type==="child"?"Child":"Staff"}</td>
+      <td>${esc(type==="child"?(p.group||""):(p.role||""))}</td>
+      <td class="t-in">${fmtTime(r.in)}</td>
+      <td class="t-out">${r.out?fmtTime(r.out):"—"}</td>
+      <td>${esc(r.by||"")}</td>
+    </tr>`;
+  }
+  html+=`</tbody></table>`;
+  t.innerHTML=html;
+}
+
+/* ---------- Person modal ---------- */
+let pmType="child", pmEditing=null;
+function openPersonModal(type, person){
+  pmType=type; pmEditing=person||null;
+  $("#childFields").style.display = type==="child"?"":"none";
+  $("#staffFields").style.display = type==="staff"?"":"none";
+  $("#pmTitle").textContent = (person?"Edit ":"Add ")+(type==="child"?"Child":"Staff");
+  $("#pmSub").textContent = type==="child"?"Children's Church record":"Volunteer / staff record";
+  $("#pmFirst").value = person?person.first:"";
+  $("#pmLast").value = person?person.last:"";
+  if(type==="child"){
+    $("#pmGroup").value = person?person.group||"Beginners":"Beginners";
+    $("#pmCode").value = person?person.code||"":"";
+    $("#pmGuardian").value = person?person.guardian||"":"";
+    $("#pmPhone").value = person?person.phone||"":"";
+    $("#pmNotes").value = person?person.notes||"":"";
+  }else{
+    $("#pmRole").value = person?person.role||"Teacher":"Teacher";
+    $("#pmStaffPhone").value = person?person.phone||"":"";
+  }
+  $("#pmDelete").style.display = person?"":"none";
+  $("#personModal").classList.add("show");
+  setTimeout(()=>$("#pmFirst").focus(),50);
+}
+function closePersonModal(){ $("#personModal").classList.remove("show"); }
+$("#pmCancel").onclick=closePersonModal;
+$("#personModal").onclick=e=>{ if(e.target.id==="personModal") closePersonModal(); };
+$("#addChildBtn").onclick=()=>openPersonModal("child");
+$("#addStaffBtn").onclick=()=>openPersonModal("staff");
+$("#fab").onclick=()=>openPersonModal("child");
+$("#fab").style.display="none";
+
+$("#pmSave").onclick=()=>{
+  const first=$("#pmFirst").value.trim(), last=$("#pmLast").value.trim();
+  if(!first && !last){ toast("Enter a name", true); return; }
+  if(pmType==="child"){
+    let code=$("#pmCode").value.trim();
+    if(code && !/^\d{4}$/.test(code)){ toast("Code must be 4 digits", true); return; }
+    if(!code) code=gen4();
+    const obj={ id: pmEditing?pmEditing.id:uid(), first, last,
+      group:$("#pmGroup").value, code, guardian:$("#pmGuardian").value.trim(),
+      phone:$("#pmPhone").value.trim(), notes:$("#pmNotes").value.trim() };
+    if(pmEditing) Object.assign(db.children.find(c=>c.id===pmEditing.id), obj);
+    else db.children.push(obj);
+  }else{
+    const obj={ id: pmEditing?pmEditing.id:uid(), first, last,
+      role:$("#pmRole").value, phone:$("#pmStaffPhone").value.trim() };
+    if(pmEditing) Object.assign(db.staff.find(c=>c.id===pmEditing.id), obj);
+    else db.staff.push(obj);
+  }
+  saveDB(); closePersonModal(); render(); toast("Saved");
+};
+$("#pmDelete").onclick=()=>{
+  if(!pmEditing) return;
+  if(!confirm(`Delete ${pmEditing.first} ${pmEditing.last} from the roster?`)) return;
+  const arr = pmType==="child"?db.children:db.staff;
+  const i=arr.findIndex(c=>c.id===pmEditing.id); if(i>-1) arr.splice(i,1);
+  saveDB(); closePersonModal(); render(); toast("Removed");
+};
+
+/* ---------- Action (check in / out) ---------- */
+let amPerson=null, amType=null, amMode=null, amPin="";
+function openAction(p, type){
+  amPerson=p; amType=type; amPin="";
+  const rec=dayRec()[key(type,p.id)];
+  const isIn = rec && rec.in && !rec.out;
+  amMode = isIn ? "out" : "in";
+  $("#amAlert").className="alert-line";
+  $("#amCodeView").style.display="none";
+  $("#amPinView").style.display="none";
+
+  if(amMode==="in"){
+    $("#amTitle").textContent = `Check in ${p.first} ${p.last}`;
+    $("#amSub").textContent = type==="child" ? (p.group||"Child") : (p.role||"Staff");
+    if(type==="child"){
+      if(p.notes && p.notes.trim()){
+        $("#amAlert").textContent = "⚠ "+p.notes.trim();
+        $("#amAlert").className="alert-line alert show";
+      }
+      // show the pickup code on check-in
+      $("#amCodeBig").textContent = p.code || "––––";
+      $("#amCodeView").style.display="";
+    }
+    $("#amConfirm").textContent = "Check in";
+  } else {
+    $("#amTitle").textContent = `Check out ${p.first} ${p.last}`;
+    $("#amSub").textContent = `Checked in at ${fmtTime(rec.in)}`;
+    if(type==="child"){
+      // Always require the pickup code to check out a child.
+      $("#amPinView").style.display="";
+      drawPin();
+      $("#amConfirm").textContent = "Verify & check out";
+    } else {
+      $("#amConfirm").textContent = "Check out";
+    }
+  }
+  $("#actionModal").classList.add("show");
+}
+function closeAction(){ $("#actionModal").classList.remove("show"); }
+$("#amCancel").onclick=closeAction;
+$("#actionModal").onclick=e=>{ if(e.target.id==="actionModal") closeAction(); };
+
+function drawPin(){ $$("#pinDots i").forEach((d,i)=>d.classList.toggle("f", i<amPin.length)); }
+$$("#actionModal .pad button").forEach(b=>b.onclick=()=>{
+  const k=b.dataset.k;
+  if(k==="clear") amPin="";
+  else if(k==="back") amPin=amPin.slice(0,-1);
+  else if(amPin.length<4) amPin+=k;
+  drawPin();
+});
+
+$("#amConfirm").onclick=()=>{
+  const rec=dayRec(); const k=key(amType,amPerson.id);
+  const who = "Desk";
+  if(amMode==="in"){
+    rec[k]={ in: Date.now(), out:null, code: amPerson.code||null, by: who };
+    saveDB(); closeAction(); render();
+    toast(`${amPerson.first} checked in`);
+  } else {
+    if(amType==="child"){
+      // Verify against the code issued at check-in (falling back to the
+      // roster code). Never allow a child to check out without it.
+      const expected = (rec[k] && rec[k].code) || amPerson.code || "";
+      if(!/^\d{4}$/.test(expected)){
+        $("#amAlert").textContent="❌ No pickup code on record. Get a coordinator to verify the guardian.";
+        $("#amAlert").className="alert-line alert show";
+        toast("Cannot check out without a code", true);
+        return;
+      }
+      if(amPin !== expected){
+        $("#amAlert").textContent="❌ Incorrect security code. Please verify with the guardian.";
+        $("#amAlert").className="alert-line alert show";
+        amPin=""; drawPin();
+        toast("Code did not match", true);
+        return;
+      }
+    }
+    rec[k].out = Date.now();
+    saveDB(); closeAction(); render();
+    toast(`${amPerson.first} checked out`);
+  }
+};
+
+/* ---------- Reports: export / print ---------- */
+$("#exportBtn").onclick=()=>{
+  const d=$("#svcDate").value; const rec=db.attendance[d]||{};
+  const rows=[["Name","Type","Class/Role","Guardian","Phone","Check-in","Check-out","Notes"]];
+  const add=(p,type)=>{ const r=rec[key(type,p.id)]; if(!r||!r.in) return;
+    rows.push([ `${p.first} ${p.last}`, type==="child"?"Child":"Staff",
+      type==="child"?(p.group||""):(p.role||""), p.guardian||"", p.phone||"",
+      new Date(r.in).toLocaleString(), r.out?new Date(r.out).toLocaleString():"",
+      (p.notes||"").replace(/\n/g," ") ]); };
+  db.children.forEach(p=>add(p,"child")); db.staff.forEach(p=>add(p,"staff"));
+  if(rows.length===1){ toast("Nothing to export for this date", true); return; }
+  // Guard against CSV/formula injection when opened in a spreadsheet.
+  const cell=c=>{ let s=String(c); if(/^[=+\-@\t\r]/.test(s)) s="'"+s; return `"${s.replace(/"/g,'""')}"`; };
+  const csv=rows.map(r=>r.map(cell).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv"}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=`VOJ-attendance-${d}.csv`; a.click();
+  URL.revokeObjectURL(url); toast("CSV exported");
+};
+$("#printBtn").onclick=()=>window.print();
+
+/* ---------- Search live ---------- */
+$("#searchIn").oninput=renderCheckin;
+$("#searchRoster").oninput=renderRoster;
+
+/* ---------- Seed sample data on first run ---------- */
+if(db.children.length===0 && db.staff.length===0 && !localStorage.getItem(DB_KEY)){
+  db.children.push(
+    {id:uid(),first:"Mercy",last:"Sulaimon",group:"Beginners",code:"1234",guardian:"Mrs. Adeyemi",phone:"555-0101",notes:"Peanut allergy"},
+    {id:uid(),first:"Emmanuel",last:"Adewoye",group:"Primary",code:"4321",guardian:"Mr. Okoro",phone:"555-0102",notes:""},
+    {id:uid(),first:"Kiana",last:"Massie",group:"Toddlers",code:"2468",guardian:"Mrs. Bello",phone:"555-0103",notes:""}
+  );
+  db.staff.push(
+    {id:uid(),first:"Sister",last:"Mongo",role:"Coordinator",phone:"948-442-7853"},
+    {id:uid(),first:"Sister",last:"Yemisi",role:"Teacher",phone:"555-0201"}
+  );
+  saveDB();
+}
+
+render();
+</script>
+</body>
+</html>
